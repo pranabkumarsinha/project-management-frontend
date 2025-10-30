@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../axios";
 import { compile } from "tailwindcss";
-
+import { toast } from "react-toastify";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   // ✅ Fixed typo: preveneDefault → preventDefault
   const handleSubmit = async (e) => {
@@ -16,28 +17,27 @@ export default function Login() {
     console.log("Password:", password);
 
     try {
-        const response = await api.post('/login',
-            {
-                email,
-                password
-            }
-        );
+      const response = await api.post("/login", {
+        email,
+        password,
+      });
 
-        const token = response.data.token;
-        localStorage.setItem("token", token);
-        setMessage(response.data.message);
-        console.log("User", response.data.user);
-        console.log("Token", token);
-
-    } catch(error) {
-        if (error.response && error.response.data.message) {
-            setMessage(error.response.data.message);
-
-        } else {
-            setMessage("Something went wrong");
-        }
+      const token = response.data.token;
+      localStorage.setItem("token", token);
+      const user = response.data.user;
+      localStorage.setItem("user", JSON.stringify(user));
+      toast.success(response.data.message);
+      setMessage(response.data.message);
+      navigate("/dashboard");
+      console.log("User", response.data.user);
+      console.log("Token", token);
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        setMessage(error.response.data.message);
+      } else {
+        setMessage("Something went wrong");
+      }
     }
-
   };
 
   return (
@@ -114,9 +114,7 @@ export default function Login() {
           />
           Log in with Google
         </button>
-        {message && (
-            <p>{message}</p>
-        )}
+        {message && <p>{message}</p>}
       </div>
     </div>
   );
